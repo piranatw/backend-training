@@ -2,25 +2,31 @@
 
 package model
 
-type Mutation struct {
+type Movie struct {
+	ID      string    `json:"id"`
+	Title   string    `json:"title"`
+	Reviews []*Review `json:"reviews"`
 }
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+type MovieInput struct {
+	ID    *string `json:"id,omitempty"`
+	Title string  `json:"title"`
+}
+
+type Mutation struct {
 }
 
 type Query struct {
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+type Review struct {
+	ID      string `json:"id"`
+	Stars   int32  `json:"stars"`
+	Comment string `json:"comment"`
+	Movie   *Movie `json:"movie"`
 }
 
-type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type ReviewInput struct {
+	Stars   int32  `json:"stars"`
+	Comment string `json:"comment"`
 }

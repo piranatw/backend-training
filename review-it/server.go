@@ -8,7 +8,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
 	"github.com/piranatw/review-it/graph"
-	"github.com/piranatw/review-it/graph/generated"
+	"github.com/piranatw/review-it/graph/model"
 )
 
 const defaultPort = "8080"
@@ -16,7 +16,18 @@ const defaultPort = "8080"
 func main() {
 	r := chi.NewRouter()
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.NewDefaultServer(
+		graph.NewExecutableSchema(
+			graph.Config{
+				Resolvers: &graph.Resolver{
+					DB: graph.Database{
+						MoviesTable:  make(map[string]model.Movie),
+						ReviewsTable: make(map[string]model.Review),
+					},
+				},
+			},
+		),
+	)
 
 	r.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	r.Handle("/query", srv)

@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Go build/test output
+bin/
+dist/
+build/
+tmp/
+*.test
+*.out
+coverage.out
+
+# Compiled local binaries
+guessthenumber/guessthenumber
+review-it/review-it
+pokedex/pokedex
+intermediate/httpcli/httpcli
+
+# Local SQLite database files
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+
+# Editor/IDE folders
+.idea/
+.vscode/

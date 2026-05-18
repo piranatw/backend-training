@@ -9,12 +9,12 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"pokedex/graph/model"
 	"strconv"
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/piranatw/review-it/graph/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -37,47 +37,47 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	Movie struct {
-		ID      func(childComplexity int) int
-		Reviews func(childComplexity int) int
-		Title   func(childComplexity int) int
+	Ability struct {
+		ID   func(childComplexity int) int
+		Name func(childComplexity int) int
 	}
 
 	Mutation struct {
-		MovieAddReviews    func(childComplexity int, movieID string, reviews []*model.ReviewInput) int
-		MovieCreate        func(childComplexity int, input model.MovieInput) int
-		MovieDelete        func(childComplexity int, id string) int
-		MovieRemoveReviews func(childComplexity int, movieID string, reviewIds []string) int
-		MovieUpdate        func(childComplexity int, input model.MovieInput) int
+		CreatePokemon func(childComplexity int, input model.CreatePokemonInput) int
+		DeletePokemon func(childComplexity int, id string) int
+		UpdatePokemon func(childComplexity int, id string, input model.UpdatePokemonInput) int
+	}
+
+	Pokemon struct {
+		Abilities   func(childComplexity int) int
+		Category    func(childComplexity int) int
+		Description func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Type        func(childComplexity int) int
+	}
+
+	PokemonType struct {
+		ID   func(childComplexity int) int
+		Name func(childComplexity int) int
 	}
 
 	Query struct {
-		Movie   func(childComplexity int, id string) int
-		Movies  func(childComplexity int) int
-		Review  func(childComplexity int, id string) int
-		Reviews func(childComplexity int) int
-	}
-
-	Review struct {
-		Comment func(childComplexity int) int
-		ID      func(childComplexity int) int
-		Movie   func(childComplexity int) int
-		Stars   func(childComplexity int) int
+		Pokemon       func(childComplexity int, id string) int
+		PokemonByName func(childComplexity int, name string) int
+		Pokemons      func(childComplexity int) int
 	}
 }
 
 type MutationResolver interface {
-	MovieCreate(ctx context.Context, input model.MovieInput) (*model.Movie, error)
-	MovieUpdate(ctx context.Context, input model.MovieInput) (*model.Movie, error)
-	MovieDelete(ctx context.Context, id string) (bool, error)
-	MovieAddReviews(ctx context.Context, movieID string, reviews []*model.ReviewInput) (*model.Movie, error)
-	MovieRemoveReviews(ctx context.Context, movieID string, reviewIds []string) (*model.Movie, error)
+	CreatePokemon(ctx context.Context, input model.CreatePokemonInput) (*model.Pokemon, error)
+	UpdatePokemon(ctx context.Context, id string, input model.UpdatePokemonInput) (*model.Pokemon, error)
+	DeletePokemon(ctx context.Context, id string) (bool, error)
 }
 type QueryResolver interface {
-	Movie(ctx context.Context, id string) (*model.Movie, error)
-	Movies(ctx context.Context) ([]*model.Movie, error)
-	Review(ctx context.Context, id string) (*model.Review, error)
-	Reviews(ctx context.Context) ([]*model.Review, error)
+	Pokemons(ctx context.Context) ([]*model.Pokemon, error)
+	Pokemon(ctx context.Context, id string) (*model.Pokemon, error)
+	PokemonByName(ctx context.Context, name string) (*model.Pokemon, error)
 }
 
 type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
@@ -94,140 +94,131 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Movie.id":
-		if e.ComplexityRoot.Movie.ID == nil {
+	case "Ability.id":
+		if e.ComplexityRoot.Ability.ID == nil {
 			break
 		}
 
-		return e.ComplexityRoot.Movie.ID(childComplexity), true
-	case "Movie.reviews":
-		if e.ComplexityRoot.Movie.Reviews == nil {
+		return e.ComplexityRoot.Ability.ID(childComplexity), true
+	case "Ability.name":
+		if e.ComplexityRoot.Ability.Name == nil {
 			break
 		}
 
-		return e.ComplexityRoot.Movie.Reviews(childComplexity), true
-	case "Movie.title":
-		if e.ComplexityRoot.Movie.Title == nil {
+		return e.ComplexityRoot.Ability.Name(childComplexity), true
+
+	case "Mutation.createPokemon":
+		if e.ComplexityRoot.Mutation.CreatePokemon == nil {
 			break
 		}
 
-		return e.ComplexityRoot.Movie.Title(childComplexity), true
-
-	case "Mutation.movieAddReviews":
-		if e.ComplexityRoot.Mutation.MovieAddReviews == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_movieAddReviews_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_createPokemon_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.MovieAddReviews(childComplexity, args["movieId"].(string), args["reviews"].([]*model.ReviewInput)), true
-	case "Mutation.movieCreate":
-		if e.ComplexityRoot.Mutation.MovieCreate == nil {
+		return e.ComplexityRoot.Mutation.CreatePokemon(childComplexity, args["input"].(model.CreatePokemonInput)), true
+	case "Mutation.deletePokemon":
+		if e.ComplexityRoot.Mutation.DeletePokemon == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_movieCreate_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_deletePokemon_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.MovieCreate(childComplexity, args["input"].(model.MovieInput)), true
-	case "Mutation.movieDelete":
-		if e.ComplexityRoot.Mutation.MovieDelete == nil {
+		return e.ComplexityRoot.Mutation.DeletePokemon(childComplexity, args["id"].(string)), true
+	case "Mutation.updatePokemon":
+		if e.ComplexityRoot.Mutation.UpdatePokemon == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_movieDelete_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_updatePokemon_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.MovieDelete(childComplexity, args["id"].(string)), true
-	case "Mutation.movieRemoveReviews":
-		if e.ComplexityRoot.Mutation.MovieRemoveReviews == nil {
+		return e.ComplexityRoot.Mutation.UpdatePokemon(childComplexity, args["id"].(string), args["input"].(model.UpdatePokemonInput)), true
+
+	case "Pokemon.abilities":
+		if e.ComplexityRoot.Pokemon.Abilities == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_movieRemoveReviews_args(ctx, rawArgs)
+		return e.ComplexityRoot.Pokemon.Abilities(childComplexity), true
+	case "Pokemon.category":
+		if e.ComplexityRoot.Pokemon.Category == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Pokemon.Category(childComplexity), true
+	case "Pokemon.description":
+		if e.ComplexityRoot.Pokemon.Description == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Pokemon.Description(childComplexity), true
+	case "Pokemon.id":
+		if e.ComplexityRoot.Pokemon.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Pokemon.ID(childComplexity), true
+	case "Pokemon.name":
+		if e.ComplexityRoot.Pokemon.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Pokemon.Name(childComplexity), true
+	case "Pokemon.type":
+		if e.ComplexityRoot.Pokemon.Type == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Pokemon.Type(childComplexity), true
+
+	case "PokemonType.id":
+		if e.ComplexityRoot.PokemonType.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PokemonType.ID(childComplexity), true
+	case "PokemonType.name":
+		if e.ComplexityRoot.PokemonType.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PokemonType.Name(childComplexity), true
+
+	case "Query.pokemon":
+		if e.ComplexityRoot.Query.Pokemon == nil {
+			break
+		}
+
+		args, err := ec.field_Query_pokemon_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.MovieRemoveReviews(childComplexity, args["movieId"].(string), args["reviewIds"].([]string)), true
-	case "Mutation.movieUpdate":
-		if e.ComplexityRoot.Mutation.MovieUpdate == nil {
+		return e.ComplexityRoot.Query.Pokemon(childComplexity, args["id"].(string)), true
+	case "Query.pokemonByName":
+		if e.ComplexityRoot.Query.PokemonByName == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_movieUpdate_args(ctx, rawArgs)
+		args, err := ec.field_Query_pokemonByName_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.MovieUpdate(childComplexity, args["input"].(model.MovieInput)), true
-
-	case "Query.movie":
-		if e.ComplexityRoot.Query.Movie == nil {
+		return e.ComplexityRoot.Query.PokemonByName(childComplexity, args["name"].(string)), true
+	case "Query.pokemons":
+		if e.ComplexityRoot.Query.Pokemons == nil {
 			break
 		}
 
-		args, err := ec.field_Query_movie_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.ComplexityRoot.Query.Movie(childComplexity, args["id"].(string)), true
-	case "Query.movies":
-		if e.ComplexityRoot.Query.Movies == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Query.Movies(childComplexity), true
-	case "Query.review":
-		if e.ComplexityRoot.Query.Review == nil {
-			break
-		}
-
-		args, err := ec.field_Query_review_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.ComplexityRoot.Query.Review(childComplexity, args["id"].(string)), true
-	case "Query.reviews":
-		if e.ComplexityRoot.Query.Reviews == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Query.Reviews(childComplexity), true
-
-	case "Review.comment":
-		if e.ComplexityRoot.Review.Comment == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Review.Comment(childComplexity), true
-	case "Review.id":
-		if e.ComplexityRoot.Review.ID == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Review.ID(childComplexity), true
-	case "Review.movie":
-		if e.ComplexityRoot.Review.Movie == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Review.Movie(childComplexity), true
-	case "Review.stars":
-		if e.ComplexityRoot.Review.Stars == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Review.Stars(childComplexity), true
+		return e.ComplexityRoot.Query.Pokemons(childComplexity), true
 
 	}
 	return 0, false
@@ -237,8 +228,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
-		ec.unmarshalInputMovieInput,
-		ec.unmarshalInputReviewInput,
+		ec.unmarshalInputCreatePokemonInput,
+		ec.unmarshalInputUpdatePokemonInput,
 	)
 	first := true
 
@@ -333,30 +324,42 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // Each function is generated once per unique object type, deduplicating the
 // switch statements that were previously inlined in every fieldContext_* function.
 
-func (ec *executionContext) childFields_Movie(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+func (ec *executionContext) childFields_Ability(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "id":
-		return ec.fieldContext_Movie_id(ctx, field)
-	case "title":
-		return ec.fieldContext_Movie_title(ctx, field)
-	case "reviews":
-		return ec.fieldContext_Movie_reviews(ctx, field)
+		return ec.fieldContext_Ability_id(ctx, field)
+	case "name":
+		return ec.fieldContext_Ability_name(ctx, field)
 	}
-	return nil, fmt.Errorf("no field named %q was found under type Movie", field.Name)
+	return nil, fmt.Errorf("no field named %q was found under type Ability", field.Name)
 }
 
-func (ec *executionContext) childFields_Review(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+func (ec *executionContext) childFields_Pokemon(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "id":
-		return ec.fieldContext_Review_id(ctx, field)
-	case "stars":
-		return ec.fieldContext_Review_stars(ctx, field)
-	case "comment":
-		return ec.fieldContext_Review_comment(ctx, field)
-	case "movie":
-		return ec.fieldContext_Review_movie(ctx, field)
+		return ec.fieldContext_Pokemon_id(ctx, field)
+	case "name":
+		return ec.fieldContext_Pokemon_name(ctx, field)
+	case "description":
+		return ec.fieldContext_Pokemon_description(ctx, field)
+	case "category":
+		return ec.fieldContext_Pokemon_category(ctx, field)
+	case "type":
+		return ec.fieldContext_Pokemon_type(ctx, field)
+	case "abilities":
+		return ec.fieldContext_Pokemon_abilities(ctx, field)
 	}
-	return nil, fmt.Errorf("no field named %q was found under type Review", field.Name)
+	return nil, fmt.Errorf("no field named %q was found under type Pokemon", field.Name)
+}
+
+func (ec *executionContext) childFields_PokemonType(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_PokemonType_id(ctx, field)
+	case "name":
+		return ec.fieldContext_PokemonType_name(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type PokemonType", field.Name)
 }
 
 func (ec *executionContext) childFields___Directive(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -475,34 +478,12 @@ func (ec *executionContext) childFields___Type(ctx context.Context, field graphq
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_movieAddReviews_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "movieId",
-		func(ctx context.Context, v any) (string, error) {
-			return ec.unmarshalNID2string(ctx, v)
-		})
-	if err != nil {
-		return nil, err
-	}
-	args["movieId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "reviews",
-		func(ctx context.Context, v any) ([]*model.ReviewInput, error) {
-			return ec.unmarshalOReviewInput2ᚕᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐReviewInputᚄ(ctx, v)
-		})
-	if err != nil {
-		return nil, err
-	}
-	args["reviews"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_movieCreate_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_createPokemon_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
-		func(ctx context.Context, v any) (model.MovieInput, error) {
-			return ec.unmarshalNMovieInput2githubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovieInput(ctx, v)
+		func(ctx context.Context, v any) (model.CreatePokemonInput, error) {
+			return ec.unmarshalNCreatePokemonInput2pokedexᚋgraphᚋmodelᚐCreatePokemonInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -511,7 +492,7 @@ func (ec *executionContext) field_Mutation_movieCreate_args(ctx context.Context,
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_movieDelete_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_deletePokemon_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
@@ -525,39 +506,25 @@ func (ec *executionContext) field_Mutation_movieDelete_args(ctx context.Context,
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_movieRemoveReviews_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_updatePokemon_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "movieId",
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
 		func(ctx context.Context, v any) (string, error) {
 			return ec.unmarshalNID2string(ctx, v)
 		})
 	if err != nil {
 		return nil, err
 	}
-	args["movieId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "reviewIds",
-		func(ctx context.Context, v any) ([]string, error) {
-			return ec.unmarshalNID2ᚕstringᚄ(ctx, v)
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.UpdatePokemonInput, error) {
+			return ec.unmarshalNUpdatePokemonInput2pokedexᚋgraphᚋmodelᚐUpdatePokemonInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
 	}
-	args["reviewIds"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_movieUpdate_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
-		func(ctx context.Context, v any) (model.MovieInput, error) {
-			return ec.unmarshalNMovieInput2githubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovieInput(ctx, v)
-		})
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg0
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -575,21 +542,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_movie_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Query_pokemonByName_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "name",
 		func(ctx context.Context, v any) (string, error) {
-			return ec.unmarshalNID2string(ctx, v)
+			return ec.unmarshalNString2string(ctx, v)
 		})
 	if err != nil {
 		return nil, err
 	}
-	args["id"] = arg0
+	args["name"] = arg0
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_review_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Query_pokemon_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
@@ -667,13 +634,13 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Movie_id(ctx context.Context, field graphql.CollectedField, obj *model.Movie) (ret graphql.Marshaler) {
+func (ec *executionContext) _Ability_id(ctx context.Context, field graphql.CollectedField, obj *model.Ability) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Movie_id(ctx, field)
+			return ec.fieldContext_Ability_id(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
@@ -686,20 +653,20 @@ func (ec *executionContext) _Movie_id(ctx context.Context, field graphql.Collect
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Movie_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	return graphql.NewScalarFieldContext("Movie", field, false, false, errors.New("field of type ID does not have child fields"))
+func (ec *executionContext) fieldContext_Ability_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Ability", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
-func (ec *executionContext) _Movie_title(ctx context.Context, field graphql.CollectedField, obj *model.Movie) (ret graphql.Marshaler) {
+func (ec *executionContext) _Ability_name(ctx context.Context, field graphql.CollectedField, obj *model.Ability) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Movie_title(ctx, field)
+			return ec.fieldContext_Ability_name(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
-			return obj.Title, nil
+			return obj.Name, nil
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
@@ -709,70 +676,38 @@ func (ec *executionContext) _Movie_title(ctx context.Context, field graphql.Coll
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Movie_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	return graphql.NewScalarFieldContext("Movie", field, false, false, errors.New("field of type String does not have child fields"))
+func (ec *executionContext) fieldContext_Ability_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Ability", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
-func (ec *executionContext) _Movie_reviews(ctx context.Context, field graphql.CollectedField, obj *model.Movie) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_createPokemon(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Movie_reviews(ctx, field)
-		},
-		func(ctx context.Context) (any, error) {
-			return obj.Reviews, nil
-		},
-		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v []*model.Review) graphql.Marshaler {
-			return ec.marshalNReview2ᚕᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐReviewᚄ(ctx, selections, v)
-		},
-		true,
-		true,
-	)
-}
-func (ec *executionContext) fieldContext_Movie_reviews(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Movie",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_Review(ctx, field)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_movieCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Mutation_movieCreate(ctx, field)
+			return ec.fieldContext_Mutation_createPokemon(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().MovieCreate(ctx, fc.Args["input"].(model.MovieInput))
+			return ec.Resolvers.Mutation().CreatePokemon(ctx, fc.Args["input"].(model.CreatePokemonInput))
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v *model.Movie) graphql.Marshaler {
-			return ec.marshalNMovie2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovie(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Pokemon) graphql.Marshaler {
+			return ec.marshalNPokemon2ᚖpokedexᚋgraphᚋmodelᚐPokemon(ctx, selections, v)
 		},
 		true,
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Mutation_movieCreate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createPokemon(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_Movie(ctx, field)
+			return ec.childFields_Pokemon(ctx, field)
 		},
 	}
 	defer func() {
@@ -782,41 +717,41 @@ func (ec *executionContext) fieldContext_Mutation_movieCreate(ctx context.Contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_movieCreate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createPokemon_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_movieUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_updatePokemon(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Mutation_movieUpdate(ctx, field)
+			return ec.fieldContext_Mutation_updatePokemon(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().MovieUpdate(ctx, fc.Args["input"].(model.MovieInput))
+			return ec.Resolvers.Mutation().UpdatePokemon(ctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdatePokemonInput))
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v *model.Movie) graphql.Marshaler {
-			return ec.marshalNMovie2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovie(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Pokemon) graphql.Marshaler {
+			return ec.marshalNPokemon2ᚖpokedexᚋgraphᚋmodelᚐPokemon(ctx, selections, v)
 		},
 		true,
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Mutation_movieUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updatePokemon(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_Movie(ctx, field)
+			return ec.childFields_Pokemon(ctx, field)
 		},
 	}
 	defer func() {
@@ -826,24 +761,24 @@ func (ec *executionContext) fieldContext_Mutation_movieUpdate(ctx context.Contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_movieUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updatePokemon_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_movieDelete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_deletePokemon(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Mutation_movieDelete(ctx, field)
+			return ec.fieldContext_Mutation_deletePokemon(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().MovieDelete(ctx, fc.Args["id"].(string))
+			return ec.Resolvers.Mutation().DeletePokemon(ctx, fc.Args["id"].(string))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
@@ -853,7 +788,7 @@ func (ec *executionContext) _Mutation_movieDelete(ctx context.Context, field gra
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Mutation_movieDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deletePokemon(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -870,129 +805,275 @@ func (ec *executionContext) fieldContext_Mutation_movieDelete(ctx context.Contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_movieDelete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_deletePokemon_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_movieAddReviews(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pokemon_id(ctx context.Context, field graphql.CollectedField, obj *model.Pokemon) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Mutation_movieAddReviews(ctx, field)
+			return ec.fieldContext_Pokemon_id(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().MovieAddReviews(ctx, fc.Args["movieId"].(string), fc.Args["reviews"].([]*model.ReviewInput))
+			return obj.ID, nil
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v *model.Movie) graphql.Marshaler {
-			return ec.marshalNMovie2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovie(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
 		},
 		true,
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Mutation_movieAddReviews(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_Movie(ctx, field)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_movieAddReviews_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
+func (ec *executionContext) fieldContext_Pokemon_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Pokemon", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
-func (ec *executionContext) _Mutation_movieRemoveReviews(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pokemon_name(ctx context.Context, field graphql.CollectedField, obj *model.Pokemon) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Mutation_movieRemoveReviews(ctx, field)
+			return ec.fieldContext_Pokemon_name(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().MovieRemoveReviews(ctx, fc.Args["movieId"].(string), fc.Args["reviewIds"].([]string))
+			return obj.Name, nil
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v *model.Movie) graphql.Marshaler {
-			return ec.marshalNMovie2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovie(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
 		},
 		true,
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Mutation_movieRemoveReviews(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_Movie(ctx, field)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_movieRemoveReviews_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
+func (ec *executionContext) fieldContext_Pokemon_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Pokemon", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
-func (ec *executionContext) _Query_movie(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pokemon_description(ctx context.Context, field graphql.CollectedField, obj *model.Pokemon) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Query_movie(ctx, field)
+			return ec.fieldContext_Pokemon_description(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Description, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Pokemon_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Pokemon", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Pokemon_category(ctx context.Context, field graphql.CollectedField, obj *model.Pokemon) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Pokemon_category(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Category, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Pokemon_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Pokemon", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Pokemon_type(ctx context.Context, field graphql.CollectedField, obj *model.Pokemon) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Pokemon_type(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.PokemonType) graphql.Marshaler {
+			return ec.marshalNPokemonType2ᚕᚖpokedexᚋgraphᚋmodelᚐPokemonTypeᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Pokemon_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Pokemon",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_PokemonType(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Pokemon_abilities(ctx context.Context, field graphql.CollectedField, obj *model.Pokemon) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Pokemon_abilities(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Abilities, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Ability) graphql.Marshaler {
+			return ec.marshalNAbility2ᚕᚖpokedexᚋgraphᚋmodelᚐAbilityᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Pokemon_abilities(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Pokemon",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Ability(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PokemonType_id(ctx context.Context, field graphql.CollectedField, obj *model.PokemonType) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PokemonType_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_PokemonType_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("PokemonType", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _PokemonType_name(ctx context.Context, field graphql.CollectedField, obj *model.PokemonType) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PokemonType_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_PokemonType_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("PokemonType", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Query_pokemons(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_pokemons(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().Pokemons(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Pokemon) graphql.Marshaler {
+			return ec.marshalNPokemon2ᚕᚖpokedexᚋgraphᚋmodelᚐPokemonᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_pokemons(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Pokemon(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_pokemon(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_pokemon(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Query().Movie(ctx, fc.Args["id"].(string))
+			return ec.Resolvers.Query().Pokemon(ctx, fc.Args["id"].(string))
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v *model.Movie) graphql.Marshaler {
-			return ec.marshalOMovie2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovie(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Pokemon) graphql.Marshaler {
+			return ec.marshalOPokemon2ᚖpokedexᚋgraphᚋmodelᚐPokemon(ctx, selections, v)
 		},
 		true,
 		false,
 	)
 }
-func (ec *executionContext) fieldContext_Query_movie(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_pokemon(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_Movie(ctx, field)
+			return ec.childFields_Pokemon(ctx, field)
 		},
 	}
 	defer func() {
@@ -1002,73 +1083,41 @@ func (ec *executionContext) fieldContext_Query_movie(ctx context.Context, field 
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_movie_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_pokemon_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_movies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_pokemonByName(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Query_movies(ctx, field)
-		},
-		func(ctx context.Context) (any, error) {
-			return ec.Resolvers.Query().Movies(ctx)
-		},
-		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v []*model.Movie) graphql.Marshaler {
-			return ec.marshalNMovie2ᚕᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovieᚄ(ctx, selections, v)
-		},
-		true,
-		true,
-	)
-}
-func (ec *executionContext) fieldContext_Query_movies(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_Movie(ctx, field)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_review(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Query_review(ctx, field)
+			return ec.fieldContext_Query_pokemonByName(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Query().Review(ctx, fc.Args["id"].(string))
+			return ec.Resolvers.Query().PokemonByName(ctx, fc.Args["name"].(string))
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v *model.Review) graphql.Marshaler {
-			return ec.marshalOReview2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐReview(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Pokemon) graphql.Marshaler {
+			return ec.marshalOPokemon2ᚖpokedexᚋgraphᚋmodelᚐPokemon(ctx, selections, v)
 		},
 		true,
 		false,
 	)
 }
-func (ec *executionContext) fieldContext_Query_review(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_pokemonByName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_Review(ctx, field)
+			return ec.childFields_Pokemon(ctx, field)
 		},
 	}
 	defer func() {
@@ -1078,41 +1127,9 @@ func (ec *executionContext) fieldContext_Query_review(ctx context.Context, field
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_review_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_pokemonByName_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_reviews(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Query_reviews(ctx, field)
-		},
-		func(ctx context.Context) (any, error) {
-			return ec.Resolvers.Query().Reviews(ctx)
-		},
-		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v []*model.Review) graphql.Marshaler {
-			return ec.marshalNReview2ᚕᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐReviewᚄ(ctx, selections, v)
-		},
-		true,
-		true,
-	)
-}
-func (ec *executionContext) fieldContext_Query_reviews(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_Review(ctx, field)
-		},
 	}
 	return fc, nil
 }
@@ -1188,107 +1205,6 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields___Schema(ctx, field)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Review_id(ctx context.Context, field graphql.CollectedField, obj *model.Review) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Review_id(ctx, field)
-		},
-		func(ctx context.Context) (any, error) {
-			return obj.ID, nil
-		},
-		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
-			return ec.marshalNID2string(ctx, selections, v)
-		},
-		true,
-		true,
-	)
-}
-func (ec *executionContext) fieldContext_Review_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	return graphql.NewScalarFieldContext("Review", field, false, false, errors.New("field of type ID does not have child fields"))
-}
-
-func (ec *executionContext) _Review_stars(ctx context.Context, field graphql.CollectedField, obj *model.Review) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Review_stars(ctx, field)
-		},
-		func(ctx context.Context) (any, error) {
-			return obj.Stars, nil
-		},
-		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v int32) graphql.Marshaler {
-			return ec.marshalNInt2int32(ctx, selections, v)
-		},
-		true,
-		true,
-	)
-}
-func (ec *executionContext) fieldContext_Review_stars(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	return graphql.NewScalarFieldContext("Review", field, false, false, errors.New("field of type Int does not have child fields"))
-}
-
-func (ec *executionContext) _Review_comment(ctx context.Context, field graphql.CollectedField, obj *model.Review) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Review_comment(ctx, field)
-		},
-		func(ctx context.Context) (any, error) {
-			return obj.Comment, nil
-		},
-		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
-			return ec.marshalNString2string(ctx, selections, v)
-		},
-		true,
-		true,
-	)
-}
-func (ec *executionContext) fieldContext_Review_comment(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	return graphql.NewScalarFieldContext("Review", field, false, false, errors.New("field of type String does not have child fields"))
-}
-
-func (ec *executionContext) _Review_movie(ctx context.Context, field graphql.CollectedField, obj *model.Review) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Review_movie(ctx, field)
-		},
-		func(ctx context.Context) (any, error) {
-			return obj.Movie, nil
-		},
-		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v *model.Movie) graphql.Marshaler {
-			return ec.marshalNMovie2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovie(ctx, selections, v)
-		},
-		true,
-		true,
-	)
-}
-func (ec *executionContext) fieldContext_Review_movie(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Review",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_Movie(ctx, field)
 		},
 	}
 	return fc, nil
@@ -2353,8 +2269,8 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputMovieInput(ctx context.Context, obj any) (model.MovieInput, error) {
-	var it model.MovieInput
+func (ec *executionContext) unmarshalInputCreatePokemonInput(ctx context.Context, obj any) (model.CreatePokemonInput, error) {
+	var it model.CreatePokemonInput
 	if obj == nil {
 		return it, nil
 	}
@@ -2364,34 +2280,55 @@ func (ec *executionContext) unmarshalInputMovieInput(ctx context.Context, obj an
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "title"}
+	fieldsInOrder := [...]string{"name", "description", "category", "type", "abilities"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "id":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
-		case "title":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Title = data
+			it.Name = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
+		case "category":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("category"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Category = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "abilities":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("abilities"))
+			data, err := ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Abilities = data
 		}
 	}
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputReviewInput(ctx context.Context, obj any) (model.ReviewInput, error) {
-	var it model.ReviewInput
+func (ec *executionContext) unmarshalInputUpdatePokemonInput(ctx context.Context, obj any) (model.UpdatePokemonInput, error) {
+	var it model.UpdatePokemonInput
 	if obj == nil {
 		return it, nil
 	}
@@ -2401,27 +2338,48 @@ func (ec *executionContext) unmarshalInputReviewInput(ctx context.Context, obj a
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"stars", "comment"}
+	fieldsInOrder := [...]string{"name", "description", "category", "type", "abilities"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "stars":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stars"))
-			data, err := ec.unmarshalNInt2int32(ctx, v)
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Stars = data
-		case "comment":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comment"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			it.Name = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Comment = data
+			it.Description = data
+		case "category":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("category"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Category = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "abilities":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("abilities"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Abilities = data
 		}
 	}
 	return it, nil
@@ -2435,29 +2393,24 @@ func (ec *executionContext) unmarshalInputReviewInput(ctx context.Context, obj a
 
 // region    **************************** object.gotpl ****************************
 
-var movieImplementors = []string{"Movie"}
+var abilityImplementors = []string{"Ability"}
 
-func (ec *executionContext) _Movie(ctx context.Context, sel ast.SelectionSet, obj *model.Movie) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, movieImplementors)
+func (ec *executionContext) _Ability(ctx context.Context, sel ast.SelectionSet, obj *model.Ability) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, abilityImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Movie")
+			out.Values[i] = graphql.MarshalString("Ability")
 		case "id":
-			out.Values[i] = ec._Movie_id(ctx, field, obj)
+			out.Values[i] = ec._Ability_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "title":
-			out.Values[i] = ec._Movie_title(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "reviews":
-			out.Values[i] = ec._Movie_reviews(ctx, field, obj)
+		case "name":
+			out.Values[i] = ec._Ability_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -2503,38 +2456,132 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "movieCreate":
+		case "createPokemon":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_movieCreate(ctx, field)
+				return ec._Mutation_createPokemon(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "movieUpdate":
+		case "updatePokemon":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_movieUpdate(ctx, field)
+				return ec._Mutation_updatePokemon(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "movieDelete":
+		case "deletePokemon":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_movieDelete(ctx, field)
+				return ec._Mutation_deletePokemon(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "movieAddReviews":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_movieAddReviews(ctx, field)
-			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var pokemonImplementors = []string{"Pokemon"}
+
+func (ec *executionContext) _Pokemon(ctx context.Context, sel ast.SelectionSet, obj *model.Pokemon) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pokemonImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Pokemon")
+		case "id":
+			out.Values[i] = ec._Pokemon_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "movieRemoveReviews":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_movieRemoveReviews(ctx, field)
-			})
+		case "name":
+			out.Values[i] = ec._Pokemon_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._Pokemon_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "category":
+			out.Values[i] = ec._Pokemon_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._Pokemon_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "abilities":
+			out.Values[i] = ec._Pokemon_abilities(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var pokemonTypeImplementors = []string{"PokemonType"}
+
+func (ec *executionContext) _PokemonType(ctx context.Context, sel ast.SelectionSet, obj *model.PokemonType) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pokemonTypeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PokemonType")
+		case "id":
+			out.Values[i] = ec._PokemonType_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._PokemonType_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -2580,26 +2627,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "movie":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_movie(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "movies":
+		case "pokemons":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -2608,7 +2636,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_movies(ctx, field)
+				res = ec._Query_pokemons(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -2621,7 +2649,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "review":
+		case "pokemon":
 			field := field
 
 			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
@@ -2630,7 +2658,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_review(ctx, field)
+				res = ec._Query_pokemon(ctx, field)
 				return res
 			}
 
@@ -2640,19 +2668,16 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "reviews":
+		case "pokemonByName":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_reviews(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
+				res = ec._Query_pokemonByName(ctx, field)
 				return res
 			}
 
@@ -2670,60 +2695,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
-
-	for label, dfs := range deferred {
-		ec.ProcessDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var reviewImplementors = []string{"Review"}
-
-func (ec *executionContext) _Review(ctx context.Context, sel ast.SelectionSet, obj *model.Review) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, reviewImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Review")
-		case "id":
-			out.Values[i] = ec._Review_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "stars":
-			out.Values[i] = ec._Review_stars(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "comment":
-			out.Values[i] = ec._Review_comment(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "movie":
-			out.Values[i] = ec._Review_movie(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3082,6 +3053,32 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNAbility2ᚕᚖpokedexᚋgraphᚋmodelᚐAbilityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Ability) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNAbility2ᚖpokedexᚋgraphᚋmodelᚐAbility(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAbility2ᚖpokedexᚋgraphᚋmodelᚐAbility(ctx context.Context, sel ast.SelectionSet, v *model.Ability) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Ability(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3096,6 +3093,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNCreatePokemonInput2pokedexᚋgraphᚋmodelᚐCreatePokemonInput(ctx context.Context, v any) (model.CreatePokemonInput, error) {
+	res, err := ec.unmarshalInputCreatePokemonInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (string, error) {
@@ -3114,61 +3116,15 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) unmarshalNID2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
-	var vSlice []any
-	vSlice = graphql.CoerceList(v)
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
+func (ec *executionContext) marshalNPokemon2pokedexᚋgraphᚋmodelᚐPokemon(ctx context.Context, sel ast.SelectionSet, v model.Pokemon) graphql.Marshaler {
+	return ec._Pokemon(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) unmarshalNInt2int32(ctx context.Context, v any) (int32, error) {
-	res, err := graphql.UnmarshalInt32(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNInt2int32(ctx context.Context, sel ast.SelectionSet, v int32) graphql.Marshaler {
-	_ = sel
-	res := graphql.MarshalInt32(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) marshalNMovie2githubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovie(ctx context.Context, sel ast.SelectionSet, v model.Movie) graphql.Marshaler {
-	return ec._Movie(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNMovie2ᚕᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovieᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Movie) graphql.Marshaler {
+func (ec *executionContext) marshalNPokemon2ᚕᚖpokedexᚋgraphᚋmodelᚐPokemonᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Pokemon) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNMovie2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovie(ctx, sel, v[i])
+		return ec.marshalNPokemon2ᚖpokedexᚋgraphᚋmodelᚐPokemon(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -3180,26 +3136,21 @@ func (ec *executionContext) marshalNMovie2ᚕᚖgithubᚗcomᚋpiranatwᚋreview
 	return ret
 }
 
-func (ec *executionContext) marshalNMovie2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovie(ctx context.Context, sel ast.SelectionSet, v *model.Movie) graphql.Marshaler {
+func (ec *executionContext) marshalNPokemon2ᚖpokedexᚋgraphᚋmodelᚐPokemon(ctx context.Context, sel ast.SelectionSet, v *model.Pokemon) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._Movie(ctx, sel, v)
+	return ec._Pokemon(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNMovieInput2githubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovieInput(ctx context.Context, v any) (model.MovieInput, error) {
-	res, err := ec.unmarshalInputMovieInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNReview2ᚕᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐReviewᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Review) graphql.Marshaler {
+func (ec *executionContext) marshalNPokemonType2ᚕᚖpokedexᚋgraphᚋmodelᚐPokemonTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PokemonType) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNReview2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐReview(ctx, sel, v[i])
+		return ec.marshalNPokemonType2ᚖpokedexᚋgraphᚋmodelᚐPokemonType(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -3211,19 +3162,14 @@ func (ec *executionContext) marshalNReview2ᚕᚖgithubᚗcomᚋpiranatwᚋrevie
 	return ret
 }
 
-func (ec *executionContext) marshalNReview2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐReview(ctx context.Context, sel ast.SelectionSet, v *model.Review) graphql.Marshaler {
+func (ec *executionContext) marshalNPokemonType2ᚖpokedexᚋgraphᚋmodelᚐPokemonType(ctx context.Context, sel ast.SelectionSet, v *model.PokemonType) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._Review(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNReviewInput2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐReviewInput(ctx context.Context, v any) (*model.ReviewInput, error) {
-	res, err := ec.unmarshalInputReviewInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
+	return ec._PokemonType(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
@@ -3240,6 +3186,41 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNUpdatePokemonInput2pokedexᚋgraphᚋmodelᚐUpdatePokemonInput(ctx context.Context, v any) (model.UpdatePokemonInput, error) {
+	res, err := ec.unmarshalInputUpdatePokemonInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -3413,54 +3394,47 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v any) (*string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalID(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+func (ec *executionContext) marshalOPokemon2ᚖpokedexᚋgraphᚋmodelᚐPokemon(ctx context.Context, sel ast.SelectionSet, v *model.Pokemon) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	_ = sel
-	_ = ctx
-	res := graphql.MarshalID(*v)
-	return res
+	return ec._Pokemon(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOMovie2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐMovie(ctx context.Context, sel ast.SelectionSet, v *model.Movie) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Movie(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOReview2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐReview(ctx context.Context, sel ast.SelectionSet, v *model.Review) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Review(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOReviewInput2ᚕᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐReviewInputᚄ(ctx context.Context, v any) ([]*model.ReviewInput, error) {
+func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
 	if v == nil {
 		return nil, nil
 	}
 	var vSlice []any
 	vSlice = graphql.CoerceList(v)
 	var err error
-	res := make([]*model.ReviewInput, len(vSlice))
+	res := make([]string, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNReviewInput2ᚖgithubᚗcomᚋpiranatwᚋreviewᚑitᚋgraphᚋmodelᚐReviewInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

@@ -1,28 +1,39 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
-
-type Todo {
+type Movie {
   id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
+  title: String!
+  reviews: [Review!]!
 }
 
-type User {
+type Review {
   id: ID!
-  name: String!
+  stars: Int!
+  comment: String!
+  movie: Movie!
 }
 
-type Query {
-  todos: [Todo!]!
+input MovieInput {
+  id: ID
+  title: String!
 }
 
-input NewTodo {
-  text: String!
-  userId: String!
+input ReviewInput {
+  stars: Int!
+  comment: String!
 }
 
 type Mutation {
-  createTodo(input: NewTodo!): Todo!
+  movieCreate(input: MovieInput!): Movie!
+  movieUpdate(input: MovieInput!): Movie!
+  movieDelete(id: ID!): Boolean!
+
+  movieAddReviews(movieId: ID!, reviews: [ReviewInput!]): Movie!
+  movieRemoveReviews(movieId: ID!, reviewIds: [ID!]!): Movie!
+}
+
+type Query {
+  movie(id: ID!): Movie
+  movies: [Movie!]!
+
+  review(id: ID!): Review
+  reviews: [Review!]!
 }

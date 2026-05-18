@@ -12,20 +12,125 @@ import (
 	"github.com/piranatw/review-it/graph/model"
 )
 
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+func (r *mutationResolver) MovieCreate(ctx context.Context, input model.MovieInput) (*model.Movie, error) {
+	if input.ID != nil {
+		return nil, fmt.Errorf("id must be null")
+	}
+
+	newMovie := model.Movie{
+		Title:   input.Title,
+		Reviews: []*model.Review{},
+	}
+
+	err := r.DB.AddMovie(&newMovie)
+	if err != nil {
+		return nil, err
+	}
+
+	return &newMovie, nil
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+func (r *mutationResolver) MovieUpdate(ctx context.Context, input model.MovieInput) (*model.Movie, error) {
+	if input.ID == nil {
+		return nil, fmt.Errorf("id must not be null")
+	}
+
+	existing, err := r.DB.FindMovieByID(*input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	movie := model.Movie{ID: *input.ID, Title: input.Title, Reviews: existing.Reviews}
+	err = r.DB.UpdateMovie(movie)
+	if err != nil {
+		return nil, err
+	}
+
+	return &movie, nil
 }
 
-// Mutation returns MutationResolver implementation.
+func (r *mutationResolver) MovieDelete(ctx context.Context, id string) (bool, error) {
+	err := r.DB.DeleteMovie(id)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) MovieAddReviews(ctx context.Context, movieID string, reviews []*model.ReviewInput) (*model.Movie, error) {
+	movie, err := r.DB.FindMovieByID(movieID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, iReview := range reviews {
+		review := model.Review{Stars: iReview.Stars, Comment: iReview.Comment, Movie: movie}
+		r.DB.AddReview(&review)
+		movie.Reviews = append(movie.Reviews, &review)
+	}
+
+	err = r.DB.UpdateMovie(*movie)
+	if err != nil {
+		return nil, err
+	}
+
+	return movie, nil
+}
+
+func (r *mutationResolver) MovieRemoveReviews(ctx context.Context, movieID string, reviewIds []string) (*model.Movie, error) {
+	movie, err := r.DB.FindMovieByID(movieID)
+	if err != nil {
+		return nil, err
+	}
+
+	mReviews := map[string]bool{}
+	for _, id := range reviewIds {
+		mReviews[id] = true
+	}
+
+	remaining := []*model.Review{}
+	for _, review := range movie.Reviews {
+		if _, ok := mReviews[review.ID]; !ok {
+			remaining = append(remaining, review)
+		} else {
+			r.DB.DeleteReview(review.ID)
+		}
+	}
+
+	movie.Reviews = remaining
+
+	err = r.DB.UpdateMovie(*movie)
+	if err != nil {
+		return nil, err
+	}
+
+	return movie, nil
+}
+
+
+func (r *queryResolver) Movie(ctx context.Context, id string) (*model.Movie, error) {
+	return r.DB.FindMovieByID(id)
+}
+
+
+func (r *queryResolver) Movies(ctx context.Context) ([]*model.Movie, error) {
+	return r.DB.FindAllMovies(), nil
+}
+
+
+func (r *queryResolver) Review(ctx context.Context, id string) (*model.Review, error) {
+	return r.DB.FindReviewByID(id)
+}
+
+
+func (r *queryResolver) Reviews(ctx context.Context) ([]*model.Review, error) {
+	return r.DB.FindAllReviews(), nil
+}
+
+
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
-// Query returns QueryResolver implementation.
+
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
