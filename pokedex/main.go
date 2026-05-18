@@ -14,12 +14,13 @@ import (
 )
 
 const defaultPort = "8070"
+const defaultDatabaseURL = "host=localhost user=pokedex password=password dbname=pokedex_db port=5432 sslmode=disable TimeZone=Asia/Tokyo"
 
 func main() {
 	port := getEnv("PORT", defaultPort)
-	dbPath := getEnv("POKEDEX_DB_PATH", "pokedex.db?_foreign_keys=on")
+	databaseURL := getEnv("DATABASE_URL", defaultDatabaseURL)
 
-	db, err := database.Connect(dbPath)
+	db, err := database.Connect(databaseURL)
 	if err != nil {
 		log.Fatalf("connect database: %v", err)
 	}

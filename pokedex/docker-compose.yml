@@ -1,0 +1,33 @@
+services:
+  pokedex-app:
+    build:
+      context: .
+    image: pokedex-app
+    ports:
+      - "8071:8070"
+    environment:
+      PORT: "8070"
+      DATABASE_URL: "host=postgres user=pokedex password=password dbname=pokedex_db port=5432 sslmode=disable TimeZone=Asia/Tokyo"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: pokedex
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: pokedex_db
+    volumes:
+      - pokedex-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pokedex -d pokedex_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pokedex-postgres-data:
