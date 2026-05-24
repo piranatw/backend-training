@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: main-mongo-deployment
+spec:
+  replicas: {{ .Values.mongo.replicaCount }}
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongodb
+          image: "{{ .Values.mongo.image.repository }}:{{ .Values.mongo.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.mongo.service.port }}
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.mongo.secret.name }}
+                  key: {{ .Values.mongo.secret.userKey }}
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.mongo.secret.name }}
+                  key: {{ .Values.mongo.secret.passwordKey }}

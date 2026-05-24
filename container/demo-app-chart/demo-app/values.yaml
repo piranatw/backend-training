@@ -1,0 +1,72 @@
+mongo:
+  replicaCount: 1
+  image:
+    repository: mongo
+    tag: "5.0"
+  service:
+    type: ClusterIP
+    port: 27018
+  secret:
+    name: mongo-secret
+    userKey: mongo-user
+    passwordKey: mongo-password
+
+image:
+  replicaCount: 1
+  image:
+    repository: jusjira/k8s-demo-svelte-webapp
+    tag: v1.1
+  service:
+    type: NodePort
+    port: 3000
+    targetPort: 3000
+    nodePort: 30100
+  env:
+    secret:
+      name: mongo-secret
+      userKey: mongo-user
+      passwordKey: mongo-password
+    configMap:
+      name: mongo-config
+      urlKey: mongo-url
+
+service:
+  nodePort: 30200
+  port: 30000
+  protocol: TCP
+  targetPort: 30000
+  type: NodePort
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 100m
+    memory: 256Mi
+
+serviceAccount:
+  create: true
+
+autoscaling:
+  enabled: true
+  maxReplicas: 5
+
+replicaCount:
+  webapp: 1
+  mongo: 1
+
+ingress:
+  enabled: false
+  hostname: webapp.example.com
+  path: /
+
+persistence:
+  enabled: false
+
+httpRoute:
+  enabled: false
+  annotations: {}
+  parentRefs: []
+  hostnames: []
+  rules: []
